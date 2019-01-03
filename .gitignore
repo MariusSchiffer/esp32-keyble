@@ -104,4 +104,5 @@ cmake-build-debug
 .history
 
 # End of https://www.gitignore.io/api/clion+all,platformio,visualstudiocode
-
+#
+secrets.h
