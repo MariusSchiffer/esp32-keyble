@@ -17,6 +17,12 @@ void tickTask(void *params) {
     }
 }
 
+eQ3* cb_instance;
+
+void notify_func(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
+    cb_instance->onNotify(pBLERemoteCharacteristic,pData,length,isNotify);
+}
+
 // TODO proper logging
 
 
@@ -25,6 +31,8 @@ eQ3::eQ3(std::string ble_address, std::string user_key, unsigned char user_id) {
     state.user_key = hexstring_to_string(user_key);
     Serial.println(state.user_key.length());
     state.user_id = user_id;
+
+    cb_instance = this;
 
     mutex = xSemaphoreCreateMutex();
 
@@ -42,6 +50,7 @@ eQ3::eQ3(std::string ble_address, std::string user_key, unsigned char user_id) {
     // TODO move this out to an extra init?
     bleClient = BLEDevice::createClient();
     bleClient->setClientCallbacks((BLEClientCallbacks *)this);
+
 
     // pin to core 1 (where the Arduino main loop resides), priority 1
     xTaskCreatePinnedToCore(&tickTask, "worker", 10000, this, 1, nullptr, 1);
@@ -76,7 +85,8 @@ bool eQ3::onTick() {
             comm = bleClient->getService(BLEUUID(BLE_UUID_SERVICE));
             sendChar = comm->getCharacteristic(BLEUUID(BLE_UUID_WRITE)); // write buffer characteristic
             recvChar = comm->getCharacteristic(BLEUUID(BLE_UUID_READ)); // read buffer characteristic
-            recvChar->setNotifyCallbacks((BLERemoteCharacteristicCallbacks*)this);
+            //recvChar->setNotifyCallbacks((BLERemoteCharacteristicCallbacks*)this);
+            recvChar->registerForNotify(&notify_func);
             lastActivity = time(NULL);
             state.connectionState = CONNECTED;
             auto queueFunc = queue.find(CONNECTED);
@@ -100,7 +110,7 @@ bool eQ3::onTick() {
 }
 
 void eQ3::onResult(BLEAdvertisedDevice advertisedDevice) {
-    if (advertisedDevice.getName() == "KEY-BLE") { // TODO: Make name and address variable
+    if (advertisedDevice.getAddress().toString() == address) { // TODO: Make name and address variable
         Serial.println("found advertised");
         Serial.println(advertisedDevice.getAddress().toString().c_str());
         bleScan->stop();

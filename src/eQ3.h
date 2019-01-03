@@ -17,8 +17,8 @@ class eQ3;
 typedef std::function<void(void*, eQ3*)> KeyBleStatusHandler;
 
 void tickTask(void *params);
-
-class eQ3 : public BLEAdvertisedDeviceCallbacks, public BLEClientCallbacks, public BLERemoteCharacteristicCallbacks {
+void notify_func(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
+class eQ3 : public BLEAdvertisedDeviceCallbacks, public BLEClientCallbacks/*, public BLERemoteCharacteristicCallbacks*/ {
     friend void tickTask(void *params);
     bool onTick();
     std::map<ConnectionState,std::function<void(void)>> queue;
@@ -29,7 +29,6 @@ class eQ3 : public BLEAdvertisedDeviceCallbacks, public BLEClientCallbacks, publ
 
     void onDisconnect(BLEClient *pClient);
 
-    void onNotify(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
 
     void onResult(BLEAdvertisedDevice advertisedDevice);
 
@@ -73,6 +72,7 @@ public:
 
     void setOnStatusChange(std::function<void(LockStatus)> cb);
 
+    void onNotify(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
     eQ3(std::string ble_address, std::string user_key, unsigned char user_id = 0xFF);
 
 
