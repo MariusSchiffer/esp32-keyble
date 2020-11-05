@@ -127,8 +127,8 @@ string compute_auth_value(string data, char msg_type_id, string session_open_non
 // --[crypt_data]---------------------------------------------------------------
 // -----------------------------------------------------------------------------
 string crypt_data(string data, char msg_type_id, string session_open_nonce, uint16_t security_counter, string key) {
-    Serial.print("Cryptdata: ");
-    Serial.println(data.length());
+    //Serial.print("# Cryptdata length: ");
+    //Serial.println(data.length());
     assert(key.length() == 16);
     assert(session_open_nonce.length() == 8);
     // is this not basically AES-CTR?

@@ -7,14 +7,15 @@
 #include "eQ3_util.h"
 using namespace std;
 
+int _LockStatus = 0;
+
 // -----------------------------------------------------------------------------
 // --[tickTask]-----------------------------------------------------------------
 // -----------------------------------------------------------------------------
 void tickTask(void *params) {
     auto * inst = (eQ3*) params;
-    while(inst->onTick()) {
+    while(inst->onTick())
         yield();
-    }
 }
 
 eQ3* cb_instance;
@@ -120,7 +121,7 @@ bool eQ3::onTick() {
 // -----------------------------------------------------------------------------
 void eQ3::onResult(BLEAdvertisedDevice advertisedDevice) {
     if (advertisedDevice.getAddress().toString() == address) { // TODO: Make name and address variable
-        Serial.println("# Gerät gefunden");
+        Serial.print("# Gerät gefunden: ");
         Serial.println(advertisedDevice.getAddress().toString().c_str());
         bleScan->stop();
         state.connectionState = FOUND;
@@ -177,9 +178,8 @@ bool eQ3::sendMessage(eQ3Message::Message *msg) {
         string padded_data;
         padded_data.append(msg->encode(&state));
         int pad_to = generic_ceil(padded_data.length(), 15, 8);
-        if (pad_to > padded_data.length()) {
+        if (pad_to > padded_data.length())
             padded_data.append(pad_to - padded_data.length(), 0);
-        }
         crypt_data(padded_data, msg->id, state.remote_session_nonce, state.local_security_counter, state.user_key);
         data.append(1, msg->id);
         data.append(crypt_data(padded_data, msg->id, state.remote_session_nonce, state.local_security_counter, state.user_key));
@@ -241,7 +241,7 @@ void eQ3::onNotify(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* p
             auto msg_security_counter = static_cast<uint16_t>(msgdata[msgdata.length() - 6]);
             msg_security_counter <<= 8;
             msg_security_counter += msgdata[msgdata.length() - 5];
-            Serial.println((int)msg_security_counter);
+            //Serial.println((int)msg_security_counter);
             if (msg_security_counter <= state.remote_security_counter) {
                 Serial.print("# Msg. security counter: ");
                 Serial.println(msg_security_counter);
@@ -324,9 +324,10 @@ void eQ3::onNotify(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* p
                 // status info
                 eQ3Message::Status_Info_Message message;
                 message.data = msgdata;
-                Serial.print("# Neuer Schloss Status: ");
+                Serial.print("# Neuer Schlossstatus: ");
                 Serial.println(message.getLockStatus());
-                onStatusChange((LockStatus)message.getLockStatus());
+                _LockStatus = message.getLockStatus();
+                //onStatusChange((LockStatus)message.getLockStatus()); // BUG: löst einen Reset aus!!
                 break;
             }
 
@@ -376,9 +377,8 @@ void eQ3::pairingRequest(std::string cardkey) {
     std::string card_key = hexstring_to_string(cardkey);
 
     string encrypted_pair_key = crypt_data(state.user_key, 0x04, state.remote_session_nonce, state.local_security_counter, card_key);
-    if (encrypted_pair_key.length() < 22) {
+    if (encrypted_pair_key.length() < 22)
         encrypted_pair_key.append(22 - encrypted_pair_key.length(), 0);
-    }
     assert(encrypted_pair_key.length() == 22);
     message->data.append(encrypted_pair_key);
 
@@ -390,9 +390,8 @@ void eQ3::pairingRequest(std::string cardkey) {
     string extra;
     extra.append(1, state.user_id);
     extra.append(state.user_key);
-    if (extra.length() < 23) {
+    if (extra.length() < 23)
         extra.append(23 - extra.length(), 0);
-    }
     assert(extra.length() == 23);
     string auth_value = compute_auth_value(extra, 0x04, state.remote_session_nonce, state.local_security_counter, card_key);
     message->data.append(auth_value);
@@ -410,7 +409,7 @@ void eQ3::sendNextFragment() {
     if (sendQueue.front().sent && std::difftime(sendQueue.front().timeSent, std::time(NULL)) < 5)
         return;
     sendQueue.front().sent = true;
-    Serial.println("# Sende aktuelles Fragment:");
+    Serial.print("# Sende aktuelles Fragment: ");
     string data = sendQueue.front().data;
     sendQueue.front().timeSent = std::time(NULL);
     Serial.println(string_to_hex(data).c_str());
@@ -420,10 +419,10 @@ void eQ3::sendNextFragment() {
 
 void eQ3::sendCommand(CommandType command) {
     xSemaphoreTake(mutex, portMAX_DELAY);
-    Serial.println("# take semaphore sendcommand");
+    Serial.println("# Erhalte Semaphore für Sendekommando");
     auto msg = new eQ3Message::CommandMessage(command);
     sendMessage(msg);
-    Serial.println("# Unlock semaphore");
+    Serial.println("# Semaphore abgeben");
     xSemaphoreGive(mutex);
 }
 

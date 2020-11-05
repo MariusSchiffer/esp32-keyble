@@ -52,6 +52,7 @@ class eQ3 : public BLEAdvertisedDeviceCallbacks, public BLEClientCallbacks/*, pu
     std::function<void(LockStatus)> onStatusChange;
 public:
     ClientState state;
+    int _LockStatus;
     void lock();
     void unlock();
     void open();
