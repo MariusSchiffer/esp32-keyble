@@ -21,8 +21,6 @@
 #define USER_ID 6
 #define CARD_KEY "M001AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"*/
 
-//#define WIFI_SSID "tcM"
-//#define WIFI_PASSWORD "TeRmiNaL-HomE-88"
 
 eQ3* keyble;
 bool do_open = false;
