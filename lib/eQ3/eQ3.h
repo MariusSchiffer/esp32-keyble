@@ -11,7 +11,7 @@
 #define BLE_UUID_SERVICE "58e06900-15d8-11e6-b737-0002a5d5c51b"
 #define BLE_UUID_WRITE "3141dd40-15db-11e6-a24b-0002a5d5c51b"
 #define BLE_UUID_READ "359d4820-15db-11e6-82bd-0002a5d5c51b"
-#define LOCK_TIMEOUT 30
+#define LOCK_TIMEOUT 35
 class eQ3;
 
 typedef std::function<void(void*, eQ3*)> KeyBleStatusHandler;
@@ -41,7 +41,7 @@ class eQ3 : public BLEAdvertisedDeviceCallbacks, public BLEClientCallbacks/*, pu
     string address;
 
     BLEScan *bleScan;
-    BLEClient *bleClient;
+    
     BLERemoteCharacteristic *sendChar;
     BLERemoteCharacteristic *recvChar;
     BLEAdvertisedDevice *device;
@@ -52,7 +52,9 @@ class eQ3 : public BLEAdvertisedDeviceCallbacks, public BLEClientCallbacks/*, pu
     std::function<void(LockStatus)> onStatusChange;
 public:
     ClientState state;
+    BLEClient *bleClient;
     int _LockStatus;
+    std::string raw_data;
     void lock();
     void unlock();
     void open();

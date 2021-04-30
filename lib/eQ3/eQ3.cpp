@@ -20,6 +20,8 @@ void tickTask(void *params) {
 
 eQ3* cb_instance;
 
+#define SEMAPHORE_WAIT_TIME  (10000 / portTICK_PERIOD_MS)
+
 // -----------------------------------------------------------------------------
 // --[notify_func]--------------------------------------------------------------
 // -----------------------------------------------------------------------------
@@ -44,8 +46,9 @@ eQ3::eQ3(std::string ble_address, std::string user_key, unsigned char user_id) {
     bleScan = BLEDevice::getScan();
     bleScan->setAdvertisedDeviceCallbacks(this);
     bleScan->setActiveScan(true);
-    bleScan->setInterval(100);
-    bleScan->setWindow(99);
+    bleScan->setInterval(50);
+    bleScan->setWindow(50);
+    
 
     // TODO move this out to an extra init?
     bleClient = BLEDevice::createClient();
@@ -59,7 +62,7 @@ eQ3::eQ3(std::string ble_address, std::string user_key, unsigned char user_id) {
 // --[onConnect]----------------------------------------------------------------
 // -----------------------------------------------------------------------------
 void eQ3::onConnect(BLEClient *pClient) {
-    Serial.println("# Disonnected");
+    Serial.println("# Connecting");
     state.connectionState = CONNECTING;
 }
 
@@ -67,7 +70,7 @@ void eQ3::onConnect(BLEClient *pClient) {
 // --[onDisconnect]-------------------------------------------------------------
 // -----------------------------------------------------------------------------
 void eQ3::onDisconnect(BLEClient *pClient) {
-    Serial.println("disconnected");
+    Serial.println("# Disconnected");
     state.connectionState = DISCONNECTED;
     recvFragments.clear();
     sendQueue = std::queue<eQ3Message::MessageFragment>(); // clear queue
@@ -107,10 +110,10 @@ bool eQ3::onTick() {
             lastActivity = time(NULL);
         }
         // TODO disconnect if no answer for long time?
-        if (state.connectionState >= CONNECTED && difftime(lastActivity, time(NULL)) > LOCK_TIMEOUT && sendQueue.empty()) {
+       /* if (state.connectionState >= CONNECTED && difftime(lastActivity, time(NULL)) > LOCK_TIMEOUT && sendQueue.empty()) {
             Serial.println("# Lock timeout");
             bleClient->disconnect();
-        }
+        }*/
         xSemaphoreGive(mutex);
     }
     return true;
@@ -132,7 +135,7 @@ void eQ3::onResult(BLEAdvertisedDevice advertisedDevice) {
 // --[setOnStatusChange]--------------------------------------------------------
 // -----------------------------------------------------------------------------
 void eQ3::setOnStatusChange(std::function<void(LockStatus)> cb) {
-    xSemaphoreTake(mutex, portMAX_DELAY);
+    xSemaphoreTake(mutex, SEMAPHORE_WAIT_TIME);
     onStatusChange = cb;
     xSemaphoreGive(mutex);
 }
@@ -154,7 +157,7 @@ void eQ3::exchangeNonces() {
 // -----------------------------------------------------------------------------
 void eQ3::connect() {
     state.connectionState = SCANNING;
-    bleScan->start(20, nullptr, false);
+    bleScan->start(25, nullptr, false);
     Serial.println("# Suche ...");
     //state.connectionState = FOUND;
     //Serial.println("connecting directly...");
@@ -169,6 +172,7 @@ bool eQ3::sendMessage(eQ3Message::Message *msg) {
         if (state.connectionState < NONCES_EXCHANGED) {
             // TODO check if slot for nonces_exchanged is already set?
             queue.insert(make_pair(NONCES_EXCHANGED,[this,msg]{
+                Serial.println("# sendMessage called again...");
                 sendMessage(msg);
             }));
             exchangeNonces();
@@ -211,6 +215,7 @@ bool eQ3::sendMessage(eQ3Message::Message *msg) {
             frag.data.append(16 - (frag.data.length() % 16), 0);  // padding
         sendQueue.push(frag);
     }
+    Serial.println("sendMessage end.");;
     free(msg);
     return true;
 }
@@ -219,7 +224,7 @@ bool eQ3::sendMessage(eQ3Message::Message *msg) {
 // --[onNotify]-----------------------------------------------------------------
 // -----------------------------------------------------------------------------
 void eQ3::onNotify(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
-    xSemaphoreTake(mutex, portMAX_DELAY);
+    xSemaphoreTake(mutex, SEMAPHORE_WAIT_TIME);
     eQ3Message::MessageFragment frag;
     lastActivity = time(NULL);
     frag.data = std::string((char *) pData, length);
@@ -327,12 +332,13 @@ void eQ3::onNotify(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* p
                 Serial.print("# Neuer Schlossstatus: ");
                 Serial.println(message.getLockStatus());
                 _LockStatus = message.getLockStatus();
+                raw_data = message.data;
                 //onStatusChange((LockStatus)message.getLockStatus()); // BUG: löst einen Reset aus!!
                 break;
             }
 
             default:
-            case 0x8f: { // user info
+            /*case 0x8f: */{ // user info
                 Serial.println("# User info");
                 xSemaphoreGive(mutex);
                 return;
@@ -352,7 +358,7 @@ void eQ3::onNotify(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* p
 // --[pairingRequest]-----------------------------------------------------------
 // -----------------------------------------------------------------------------
 void eQ3::pairingRequest(std::string cardkey) {
-    xSemaphoreTake(mutex, portMAX_DELAY);
+    xSemaphoreTake(mutex, SEMAPHORE_WAIT_TIME);
     if (state.connectionState < NONCES_EXCHANGED) {
         // TODO check if slot for nonces_exchanged is already set?
 
@@ -360,6 +366,7 @@ void eQ3::pairingRequest(std::string cardkey) {
         queue.insert(make_pair(NONCES_EXCHANGED,[this,cardkey]{
             pairingRequest(cardkey);
         }));
+        Serial.println("# Pairing request");
         exchangeNonces();
         xSemaphoreGive(mutex);
         return;
@@ -418,7 +425,7 @@ void eQ3::sendNextFragment() {
 }
 
 void eQ3::sendCommand(CommandType command) {
-    xSemaphoreTake(mutex, portMAX_DELAY);
+    xSemaphoreTake(mutex, SEMAPHORE_WAIT_TIME);
     Serial.println("# Erhalte Semaphore für Sendekommando");
     auto msg = new eQ3Message::CommandMessage(command);
     sendMessage(msg);
@@ -439,4 +446,8 @@ void eQ3::open() {
 }
 
 void eQ3::updateInfo() {
+    xSemaphoreTake(mutex, SEMAPHORE_WAIT_TIME);
+    auto * message = new eQ3Message::StatusRequestMessage;
+    sendMessage(message);
+    xSemaphoreGive(mutex);
 }

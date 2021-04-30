@@ -120,6 +120,7 @@ string compute_auth_value(string data, char msg_type_id, string session_open_non
     extra.append(nonce);
     extra.append(2, 0);
     string ret = xor_array(encrypted_xor_data.substr(0, 4), encrypt_aes_ecb(extra, key));
+    Serial.print(" fertig...");
     return ret;
 }
 
