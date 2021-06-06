@@ -40,10 +40,10 @@ Step by step setup:
 - You well be redirected to the main page of AutoConnect.
 - Click on "Home" to see the entered credentials.
 - Now everthing is set up and the ESP publishes its states to the given MQTT Broker.
-- It puplishes the state once on startup and has then to be triggert from outside.
+- It publishes the state once on startup and has then to be triggert from outside.
 - I use Node Red to get the locks state every 25 seconds to check for changes.
 
-The bridge puplishes to the given topic you entered at setup.
+The bridge publishes to the given topic you entered at setup.
 
 Endpoints are:
 
