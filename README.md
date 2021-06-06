@@ -39,8 +39,8 @@ Step by step setup:
 - After saving the credentials click on "Reset" to reboot.
 - You well be redirected to the main page of AutoConnect.
 - Click on "Home" to see the entered credentials.
-- Now everthing is set up the ESP publishs its states to the given MQTT Broker.
-- It puplishes messages once on startup and has to be triggert from outside.
+- Now everthing is set up and the ESP publishes its states to the given MQTT Broker.
+- It puplishes the state once on startup and has then to be triggert from outside.
 - I use Node Red to get the locks state every 25 seconds to check for changes.
 
 The bridge puplishes to the given topic you entered at setup.
@@ -59,6 +59,7 @@ TODO
 - register user feature
 - error handling
 - more endpoints like IP, uptime, etc.
+- a command queue topic to get commands while the bridge was busy
 - a nice 3D printed housing
 
 Beside the ESP32 solutions, I have a modded verison of oyooyo's first implementaion running on a Pi Zero, with 5 locks permanently connected at the same time a (Batterys last around 2 month). The locks are managed with Node Red and integrated in a Loxone Smart Home with a Doorbird and an external RFID reader. If I have time I will upload this to github too.
