@@ -21,27 +21,27 @@ Some changes/additions made:
 - boot button on the ESP32 board toggles the lock
 - changed partion table
 
-How does it work now?
+Step by step setup:
 
-Erase the flash first because of SPIFFS usage and maybe stored old WiFi credentials.
-Upload the project (I use Platformio).
-Connect to the ESP32's WiFi network.
-By default the SSID is "KeyBLEBridge" with default password "eqivalock".
-After you have connected to the network, go to 192.168.4.1 with you browser.
-At rootlevel you will just see a simple webpage.
-Click on the gear to connect to your WiFi Network.
-Now you will see the AutoConnect portal page.
-Go to "Configure new AP" to enter your credentials.
-AutoConnect scans for network, just choose the one you want to connect to.
-I recommend you to disable DHCP and give the bridge a static IP.
-The ESP32 reboots, so you have to access it with the new given IP.
-Follow the link and enter MQTT and KeyBLE credentials.
-After saving the credentials click on "Reset" to reboot.
-You well be redirected to the main page of AutoConnect.
-Click on "Home" to see the entered credentials.
-Now everthing is set up the ESP publishs its states to the given MQTT Broker.
-It puplishes messages once on startup and has to be triggert from outside.
-I use Node Red to get the locks state every 25 seconds to check for changes.
+- Erase the flash first because of SPIFFS usage and maybe stored old WiFi credentials.
+- Upload the project (I use Platformio).
+- Connect to the ESP32's WiFi network.
+- By default the SSID is "KeyBLEBridge" with default password "eqivalock".
+- After you have connected to the network, go to 192.168.4.1 with you browser.
+- At rootlevel you will just see a simple webpage.
+- Click on the gear to connect to your WiFi Network.
+- Now you will see the AutoConnect portal page.
+- Go to "Configure new AP" to enter your credentials.
+- AutoConnect scans for network, just choose the one you want to connect to.
+- I recommend you to disable DHCP and give the bridge a static IP.
+- The ESP32 reboots, so you have to access it with the new given IP.
+- Follow the link and enter MQTT and KeyBLE credentials.
+- After saving the credentials click on "Reset" to reboot.
+- You well be redirected to the main page of AutoConnect.
+- Click on "Home" to see the entered credentials.
+- Now everthing is set up the ESP publishs its states to the given MQTT Broker.
+- It puplishes messages once on startup and has to be triggert from outside.
+- I use Node Red to get the locks state every 25 seconds to check for changes.
 
 The bridge puplishes to the given topic you entered at setup.
 
