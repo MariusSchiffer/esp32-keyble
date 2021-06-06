@@ -32,7 +32,7 @@ Step by step setup:
 - Click on the gear to connect to your WiFi Network.
 - Now you will see the AutoConnect portal page.
 - Go to "Configure new AP" to enter your credentials.
-- AutoConnect scans for network, just choose the one you want to connect to.
+- AutoConnect scans for networks in reach, just choose the one you want to connect to.
 - I recommend you to disable DHCP and give the bridge a static IP.
 - The ESP32 reboots, so you have to access it with the new given IP.
 - Follow the link and enter MQTT and KeyBLE credentials.
