@@ -1,10 +1,12 @@
 # esp32-keyble
 ESP32 port of the keyble library
-working, with additions!
+working, with some additions!
+
+Thanks go to Rop09, tc-maxx, henfri, MariusSchiffer and of course oyooyo for their brillant work!
 
 Took tc-maxx/Rop09 last update that was posted here: https://www.mikrocontroller.net/topic/458856#6650683
 
-Fiddled around a bit to get it to run stable.
+Fiddled around a bit to get it to run more stable.
 
 Some changes/additions made:
 
@@ -51,18 +53,15 @@ Endpoints are:
 - /state as strings; locked, unlocked, open, unknown
 - /task working; if the lock has already received a command to be executed, waiting; ready to receive a command
 
-The /task endpoint is usefull, because the ESP toggles between WiFi and BLE connections. If the bridge is connected to WiFi and recieves a command via MQTT, it disables WiFi, connects to the lock via BLE and reconnects after the BLE task has finished and publishes the new state to the mqtt endpoints.
+The /task endpoint is usefull, because the ESP toggles between WiFi and BLE connections. If the bridge is connected to WiFi and recieves a command via MQTT, it disables WiFi, connects to the lock via BLE, reconnects after the BLE task has finished and publishes the new state to the mqtt broker.
 
 TODO
 - register user feature
 - error handling
-- a nice 3D prited housing
+- more endpoints like IP, uptime, etc.
+- a nice 3D printed housing
+
+Beside the ESP32 solutions, I have a modded verison of oyooyo's first implementaion running on a Pi Zero, with 5 locks permanently connected at the same time a (Batterys last around 2 month). The locks are managed with Node Red and integrated in a Loxone Smart Home with a Doorbird and an external RFID reader. If I have time I will upload this to github too.
+
 
 Have fun!
-
-
-
-
-
-
-
