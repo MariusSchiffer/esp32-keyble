@@ -44,11 +44,10 @@ bool eQ3Message::MessageFragment::isComplete() {
 // --[getType]-----------------------------------------......-------------------
 // -----------------------------------------------------------------------------
 char eQ3Message::MessageFragment::getType() {
-    if (!isFirst()) {
-        // throw "Not first";
-    } else {
+    if (isFirst()) {
         return data[1];
     }
+    return false;
 }
 
 // -----------------------------------------------------------------------------

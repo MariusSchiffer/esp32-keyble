@@ -54,6 +54,7 @@ public:
     ClientState state;
     BLEClient *bleClient;
     int _LockStatus;
+    int _RSSI;
     std::string raw_data;
     void lock();
     void unlock();
@@ -61,6 +62,7 @@ public:
     void pairingRequest(std::string cardkey);
     void connect();
     void updateInfo();
+    void toggle();
     void setOnStatusChange(std::function<void(LockStatus)> cb);
     void onNotify(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
     eQ3(std::string ble_address, std::string user_key, unsigned char user_id = 0xFF);

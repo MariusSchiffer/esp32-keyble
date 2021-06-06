@@ -120,7 +120,7 @@ string compute_auth_value(string data, char msg_type_id, string session_open_non
     extra.append(nonce);
     extra.append(2, 0);
     string ret = xor_array(encrypted_xor_data.substr(0, 4), encrypt_aes_ecb(extra, key));
-    Serial.print(" fertig...");
+    Serial.println("# fertig...");
     return ret;
 }
 
@@ -128,8 +128,8 @@ string compute_auth_value(string data, char msg_type_id, string session_open_non
 // --[crypt_data]---------------------------------------------------------------
 // -----------------------------------------------------------------------------
 string crypt_data(string data, char msg_type_id, string session_open_nonce, uint16_t security_counter, string key) {
-    //Serial.print("# Cryptdata length: ");
-    //Serial.println(data.length());
+    Serial.print("# Cryptdata length: ");
+    Serial.println(data.length());
     assert(key.length() == 16);
     assert(session_open_nonce.length() == 8);
     // is this not basically AES-CTR?
