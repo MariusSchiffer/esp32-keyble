@@ -41,7 +41,6 @@ AutoConnectConfig config;
 fs::SPIFFSFS& FlashFS = SPIFFS;
 
 eQ3* keyble;
-eQ3* registerkeyble;
 
 bool do_open = false;
 bool do_lock = false;
@@ -70,6 +69,13 @@ String  MqttTopic;
 String KeyBleMac;
 String KeyBleUserKey;
 String KeyBleUserId;
+
+String mqtt_sub  = "";
+String mqtt_pub  = "";
+String mqtt_pub2 = "";
+String mqtt_pub3 = "";
+String mqtt_pub4 = "";
+
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
@@ -242,49 +248,57 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
 // ---[MqttCallback]------------------------------------------------------------
 void MqttCallback(char* topic, byte* payload, unsigned int length) {
   Serial.print("# Message received: ");
-  /*
+    /*
   //pair
   if (payload[0] == '6')
   {
     do_pair = true;
-    Serial.println("*** pair ***");
+    mqtt_sub = "*** pair ***";
+    Serial.println(mqtt_sub");
+    
   }
   */
   //toggle
   if (payload[0] == '5')
   {
     do_toggle = true;
-    Serial.println("*** toggle ***");
+    mqtt_sub = "*** toggle ***";
+    Serial.println(mqtt_sub);
   }
   //open
   if (payload[0] == '4')
   {
     do_open = true;
-    Serial.println("*** open ***");
+    mqtt_sub = "*** open ***";
+    Serial.println(mqtt_sub);
   }
   //lock  
   if (payload[0] == '3')
   {
     do_lock = true;
-    Serial.println("*** lock ***");
+    mqtt_sub = "*** lock ***";
+    Serial.println(mqtt_sub);
   }
   //unlock
   if (payload[0] == '2')
   { 
     do_unlock = true;
-    Serial.println("*** unlock ***");
+    mqtt_sub = "*** unlock ***";
+    Serial.println(mqtt_sub);
   }
   //status
   if (payload[0] == '1')
   {
     do_status = true;
-    Serial.println("*** status ***");
+    mqtt_sub = "*** status ***";
+    Serial.println(mqtt_sub);
   }
 }
 // ---[MQTTpublish]-------------------------------------------------------------
 void MqttPublish()
 {
   statusUpdated = false;
+  //MQTT_PUB status
   status = keyble->_LockStatus;
   String str_status="";
   char charBuffer1[9];
@@ -307,9 +321,11 @@ void MqttPublish()
   Serial.print((String(MqttTopic + MQTT_PUB).c_str()));
   Serial.print("/");
   Serial.println(charBuffer1);
+  mqtt_pub = charBuffer1;
 
   delay(100);
 
+  //MQTT_PUB2 task
   String str_task="waiting";
   char charBuffer2[8];
   str_task.toCharArray(charBuffer2, 8);
@@ -318,8 +334,9 @@ void MqttPublish()
   Serial.print((String(MqttTopic + MQTT_PUB2).c_str()));
   Serial.print("/");
   Serial.println(charBuffer2);
+  mqtt_pub2 = charBuffer2;
 
-  //battery
+  //MQTT_PUB3 battery
   if(keyble->raw_data[1] == 0x81)
   {  
     mqttClient.publish((String(MqttTopic + MQTT_PUB3).c_str()), "false");
@@ -327,6 +344,7 @@ void MqttPublish()
     Serial.print((String(MqttTopic + MQTT_PUB3).c_str()));
     Serial.print("/");
     Serial.println("0");
+    mqtt_pub3 = true;
   }
   if(keyble->raw_data[1] == 0x01)
   {  
@@ -334,20 +352,23 @@ void MqttPublish()
     Serial.print("# published ");
     Serial.print((String(MqttTopic + MQTT_PUB3).c_str()));
     Serial.print("/");
-    Serial.println("1"); 
+    Serial.println("1");
+    mqtt_pub3 = true;
   }
 
-  //RSSI
+  //MQTT_PUB3 rssi
   rssi = keyble->_RSSI;
   char charBuffer3[4];
   String strRSSI =  String(rssi);
+  
   strRSSI.toCharArray(charBuffer3, 4);
   mqttClient.publish((String(MqttTopic + MQTT_PUB4).c_str()), charBuffer3);
+  mqtt_pub4 = charBuffer3;
   Serial.print("# published ");
   Serial.print((String(MqttTopic + MQTT_PUB4).c_str()));
   Serial.print("/");
   Serial.println(charBuffer3);
-       
+         
   Serial.println("# waiting for command...");
 }
 // ---[MQTT-Setup]--------------------------------------------------------------
@@ -372,11 +393,18 @@ void rootPage()
   String  content =
    "<html>"
     "<head>"
-     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-    "</head>"
-    "<body>"
-     "<h2 align=\"center\" style=\"color:blue;margin:20px;\">KeyBLEBridge Config</h2>"
-     "<p></p><p style=\"padding-top:15px;text-align:center\">" AUTOCONNECT_LINK(COG_24) "</p>";
+     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
+  if (mqtt_sub != "\0")
+  {
+    content +=
+    "<meta http-equiv=\"refresh\" content=\"30\"/>";
+  }
+  content +=
+   "</head>"
+   "<body>"
+   "<h2 align=\"center\" style=\"color:blue;margin:20px;\">KeyBLEBridge Config</h2>"
+   "<p></p><p style=\"padding-top:15px;text-align:center\">" AUTOCONNECT_LINK(COG_24) "</p>";
+
   if (!WiFi.localIP())
   {
     content +=
@@ -405,9 +433,16 @@ void rootPage()
      "<h2 align=\"center\" style=\"color:green;margin:20px;\">MQTT Topic: " + MqttTopic + "</h2>"
      "<h2 align=\"center\" style=\"color:green;margin:20px;\">KeyBLE MAC Address: " + KeyBleMac + "</h2>"
      "<h2 align=\"center\" style=\"color:green;margin:20px;\">KeyBLE User Key: " + KeyBleUserKey + "</h2>"
-     "<h2 align=\"center\" style=\"color:green;margin:20px;\">KeyBLE User ID: " + KeyBleUserId + "</h2>";
+     "<h2 align=\"center\" style=\"color:green;margin:20px;\">KeyBLE User ID: " + KeyBleUserId + "</h2>"
+     "<h2 align=\"center\" style=\"color:green;margin:20px;\">KeyBLE last battery state: " + mqtt_pub3 + "</h2>"
+     "<h2 align=\"center\" style=\"color:green;margin:20px;\">KeyBLE last command received: " + mqtt_sub + "</h2>"
+     "<h2 align=\"center\" style=\"color:green;margin:20px;\">KeyBLE last rssi: " + mqtt_pub4 + "</h2>"
+     "<h2 align=\"center\" style=\"color:green;margin:20px;\">KeyBLE last state: " + mqtt_pub + "</h2>"
+     "<h2 align=\"center\" style=\"color:green;margin:20px;\">KeyBLE last task: " + mqtt_pub2 + "</h2>"
+     "<br>"
+     "<h2 align=\"center\" style=\"color:blue;margin:20px;\">page refresh every 30 seconds</h2>";
   }
-  
+
   content +=
     "</body>"
     "</html>";
@@ -576,6 +611,7 @@ if (do_open || do_lock || do_unlock || do_status || do_toggle || do_pair)
   Serial.print((String(MqttTopic + MQTT_PUB2).c_str()));
   Serial.print("/");
   Serial.println(charBuffer4);
+  mqtt_pub2 = charBuffer4;
   delay(200);
   SetWifi(false);
   yield();
