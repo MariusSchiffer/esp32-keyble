@@ -48,7 +48,7 @@ The bridge publishes to the given topic you entered at setup.
 
 Endpoints are:
 
-- /battery 1 for good, 0 for low
+- /battery true for good, false for low
 - /command 1 for status, 2 to unlock, 3 to lock, 4 to open and 5 to toggle)
 - /rssi signalstrength
 - /state as strings; locked, unlocked, open, moving, timeout
