@@ -51,7 +51,7 @@ Endpoints are:
 - /battery 1 for good, 0 for low
 - /command 1 for status, 2 to unlock, 3 to lock, 4 to open and 5 to toggle)
 - /rssi signalstrength
-- /state as strings; locked, unlocked, open, unknown
+- /state as strings; locked, unlocked, open, moving, timeout
 - /task working; if the lock has already received a command to be executed, waiting; ready to receive a command
 
 The /task endpoint is usefull, because the ESP toggles between WiFi and BLE connections. If the bridge is connected to WiFi and recieves a command via MQTT, it disables WiFi, connects to the lock via BLE, reconnects after the BLE task has finished and publishes the new state to the mqtt broker.
