@@ -173,7 +173,7 @@ static const char AUX_keyble_setting[] PROGMEM = R"raw(
         "name": "clear",
         "type": "ACSubmit",
         "value": "OK",
-        "uri": "/_ac#rdlg"
+        "uri": "/keyble_setting"
       }
     ]
   }
